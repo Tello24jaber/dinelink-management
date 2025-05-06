@@ -1,0 +1,313 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Manager Dashboard</title>
+    <style>
+        :root {
+            --primary-color: #333;
+            --accent-color: #ffcc00;
+            --text-light: #ffffff;
+            --text-dark: #333333;
+            --bg-light: #f5f5f5;
+            --card-bg: #ffffff;
+            --shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: Arial, sans-serif;
+        }
+
+        body {
+            background-color: var(--bg-light);
+            color: var(--text-dark);
+        }
+
+        .navbar {
+            background-color: var(--primary-color);
+            color: var(--text-light);
+            padding: 1rem 0;
+            box-shadow: var(--shadow);
+        }
+
+        .navbar .container {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+
+        .navbar-menu {
+            display: flex;
+            list-style: none;
+        }
+
+        .navbar-menu li {
+            margin-left: 1.5rem;
+        }
+
+        .navbar-menu a {
+            color: var(--text-light);
+            text-decoration: none;
+            transition: color 0.3s;
+            padding: 0.5rem 0;
+        }
+
+        .navbar-menu a:hover {
+            color: var(--accent-color);
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 1rem;
+        }
+
+        .dashboard-header {
+            margin: 2rem 0;
+        }
+
+        .greeting {
+            font-size: 1.8rem;
+            margin-bottom: 0.5rem;
+        }
+
+        .date-time {
+            color: #666;
+            font-size: 1rem;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 1.5rem;
+            margin: 2rem 0;
+        }
+
+        .stat-card {
+            background-color: var(--card-bg);
+            border-radius: 8px;
+            padding: 1.5rem;
+            box-shadow: var(--shadow);
+            transition: transform 0.3s;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+        }
+
+        .stat-title {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 1.1rem;
+            color: #555;
+            margin-bottom: 1rem;
+        }
+
+        .stat-icon {
+            background-color: rgba(255, 204, 0, 0.2);
+            border-radius: 50%;
+            width: 36px;
+            height: 36px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .stat-value {
+            font-size: 2.5rem;
+            font-weight: bold;
+            margin-bottom: 0.5rem;
+        }
+
+        .stat-label {
+            font-size: 0.9rem;
+            color: #777;
+        }
+
+        .tooltip {
+            position: relative;
+            cursor: help;
+        }
+
+        .tooltip:hover::after {
+            content: attr(data-tooltip);
+            position: absolute;
+            top: -40px;
+            left: 0;
+            background-color: #333;
+            color: white;
+            padding: 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        @keyframes countUp {
+            from {
+                opacity: 0;
+                transform: translateY(20px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .animate-in {
+            animation: countUp 0.8s forwards;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <div class="navbar-brand">Restaurant Dashboard</div>
+            <ul class="navbar-menu">
+                <li><a href="#">Dashboard</a></li>
+                <li><a href="#">Orders</a></li>
+                <li><a href="#">Menu</a></li>
+                <li><a href="#">Reports</a></li>
+                <li><a href="#">Settings</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container">
+        <header class="dashboard-header">
+            <h1 class="greeting" id="restaurantGreeting">Welcome, Manager!</h1>
+            <p class="date-time" id="currentDateTime">Loading date and time...</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card tooltip" data-tooltip="Total orders received in the last 24 hours">
+                <div class="stat-title">
+                    <div class="stat-icon">📋</div>
+                    <span>Orders Today</span>
+                </div>
+                <div class="stat-value" id="orderCount">0</div>
+                <div class="stat-label">+12% from yesterday</div>
+            </div>
+
+            <div class="stat-card tooltip" data-tooltip="Total revenue generated today">
+                <div class="stat-title">
+                    <div class="stat-icon">💰</div>
+                    <span>Revenue Today</span>
+                </div>
+                <div class="stat-value" id="revenueValue">$0</div>
+                <div class="stat-label">+8% from yesterday</div>
+            </div>
+
+            <div class="stat-card tooltip" data-tooltip="Most ordered item in the last 24 hours">
+                <div class="stat-title">
+                    <div class="stat-icon">🔥</div>
+                    <span>Most Ordered Item</span>
+                </div>
+                <div class="stat-value" id="topItemCount">0</div>
+                <div class="stat-label" id="topItemName">Loading...</div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Initialize restaurant name from localStorage (or set a default)
+        function initRestaurantName() {
+            // Try to get restaurant name from localStorage
+            let restaurantName = localStorage.getItem('restaurantName');
+            
+            // If not found, set a default and save it
+            if (!restaurantName) {
+                restaurantName = "Pizza Town";
+                localStorage.setItem('restaurantName', restaurantName);
+            }
+            
+            // Update the greeting header
+            document.getElementById('restaurantGreeting').textContent = `Welcome, ${restaurantName} Manager!`;
+        }
+
+        // Update date and time
+        function updateDateTime() {
+            const now = new Date();
+            const options = { 
+                weekday: 'long', 
+                year: 'numeric', 
+                month: 'long', 
+                day: 'numeric',
+                hour: '2-digit',
+                minute: '2-digit'
+            };
+            const formattedDateTime = now.toLocaleDateString('en-US', options);
+            document.getElementById('currentDateTime').textContent = formattedDateTime;
+        }
+
+        // Animated number counting
+        function animateValue(id, start, end, duration, prefix = '') {
+            const obj = document.getElementById(id);
+            const range = end - start;
+            const minTimer = 50;
+            let stepTime = Math.abs(Math.floor(duration / range));
+            
+            stepTime = Math.max(stepTime, minTimer);
+            
+            const startTime = new Date().getTime();
+            const endTime = startTime + duration;
+            
+            function run() {
+                const now = new Date().getTime();
+                const remaining = Math.max((endTime - now) / duration, 0);
+                const value = Math.round(end - (remaining * range));
+                obj.textContent = `${prefix}${value}`;
+                
+                if (value !== end) {
+                    setTimeout(run, stepTime);
+                }
+            }
+            
+            setTimeout(() => {
+                obj.classList.add('animate-in');
+                run();
+            }, 300);
+        }
+
+        // Mock data for dashboard
+        function loadMockData() {
+            // Simulate loading from API
+            setTimeout(() => {
+                // Orders count - animate from 0 to 87
+                animateValue('orderCount', 0, 87, 1500);
+                
+                // Revenue - animate from 0 to 3249
+                animateValue('revenueValue', 0, 3249, 2000, '$');
+                
+                // Top item - animate count from 0 to 34
+                animateValue('topItemCount', 0, 34, 1500);
+                
+                // Update top item name after a small delay
+                setTimeout(() => {
+                    document.getElementById('topItemName').textContent = "Margherita Pizza";
+                }, 500);
+            }, 500);
+        }
+
+        // Initialize everything when page loads
+        window.addEventListener('DOMContentLoaded', () => {
+            initRestaurantName();
+            updateDateTime();
+            setInterval(updateDateTime, 60000); // Update time every minute
+            loadMockData();
+        });
+    </script>
+</body>
+</html>

@@ -1,0 +1,351 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Sales Analytics Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+
+        .navbar {
+            background-color: #333;
+            color: white;
+            padding: 15px 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+            padding: 0 15px;
+        }
+
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+        }
+
+        .stats-container {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .stat-card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+            text-align: center;
+        }
+
+        .stat-card h3 {
+            margin: 0;
+            font-size: 14px;
+            color: #666;
+        }
+
+        .stat-card p {
+            margin: 10px 0 0;
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .chart-controls {
+            margin-bottom: 15px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .chart-wrapper {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        .chart-container {
+            position: relative;
+            height: 300px;
+            width: 100%;
+        }
+
+        select {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+
+        @media (max-width: 768px) {
+            .stats-container {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+
+        @media (max-width: 480px) {
+            .header {
+                flex-direction: column;
+                align-items: flex-start;
+            }
+            
+            .chart-controls {
+                flex-direction: column;
+                align-items: flex-start;
+                gap: 10px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="navbar">
+        <div class="container">
+            <h1 id="restaurant-name">Restaurant Sales Analytics</h1>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="header">
+            <h2>Sales Dashboard</h2>
+            <p id="date-display"></p>
+        </div>
+
+        <div class="stats-container">
+            <div class="stat-card">
+                <h3>Weekly Revenue</h3>
+                <p id="weekly-revenue">$3,245</p>
+            </div>
+            <div class="stat-card">
+                <h3>Revenue Today</h3>
+                <p id="today-revenue">$485</p>
+            </div>
+            <div class="stat-card">
+                <h3>Most Ordered</h3>
+                <p id="most-ordered">Burger</p>
+            </div>
+            <div class="stat-card">
+                <h3>Total Orders (Week)</h3>
+                <p id="total-orders">247</p>
+            </div>
+        </div>
+
+        <div class="chart-controls">
+            <h3>Charts</h3>
+            <div>
+                <label for="chart-selector">Show/Hide: </label>
+                <select id="chart-selector">
+                    <option value="all">All Charts</option>
+                    <option value="top-selling">Top Selling Items</option>
+                    <option value="hourly-revenue">Hourly Revenue</option>
+                    <option value="weekly-orders">Weekly Orders</option>
+                </select>
+            </div>
+        </div>
+
+        <div class="chart-wrapper" id="top-selling-wrapper">
+            <h3>Top-Selling Items</h3>
+            <div class="chart-container">
+                <canvas id="top-selling-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-wrapper" id="hourly-revenue-wrapper">
+            <h3>Revenue by Hour</h3>
+            <div class="chart-container">
+                <canvas id="hourly-revenue-chart"></canvas>
+            </div>
+        </div>
+
+        <div class="chart-wrapper" id="weekly-orders-wrapper">
+            <h3>Orders per Day (Last 7 Days)</h3>
+            <div class="chart-container">
+                <canvas id="weekly-orders-chart"></canvas>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Check and set restaurant name from localStorage
+        document.addEventListener('DOMContentLoaded', function() {
+            // Set restaurant name (using localStorage or default)
+            const storedName = localStorage.getItem('restaurantName');
+            const restaurantName = storedName || 'Tasty Bites';
+            document.getElementById('restaurant-name').textContent = restaurantName;
+            
+            // If no name is stored, set a default
+            if (!storedName) {
+                localStorage.setItem('restaurantName', 'Tasty Bites');
+            }
+
+            // Display current date
+            const options = { weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' };
+            const currentDate = new Date().toLocaleDateString('en-US', options);
+            document.getElementById('date-display').textContent = currentDate;
+
+            // Initialize charts
+            initializeCharts();
+            
+            // Set up chart selector
+            document.getElementById('chart-selector').addEventListener('change', function() {
+                const chartWrappers = document.querySelectorAll('.chart-wrapper');
+                const selection = this.value;
+                
+                chartWrappers.forEach(wrapper => {
+                    if (selection === 'all') {
+                        wrapper.style.display = 'block';
+                    } else {
+                        if (wrapper.id.includes(selection)) {
+                            wrapper.style.display = 'block';
+                        } else {
+                            wrapper.style.display = 'none';
+                        }
+                    }
+                });
+            });
+        });
+
+        function initializeCharts() {
+            // Mock data for charts
+            const topSellingItems = {
+                labels: ['Burger', 'Fries', 'Pizza', 'Salad', 'Pasta', 'Steak'],
+                data: [45, 32, 27, 18, 24, 15]
+            };
+
+            const hourlyRevenue = {
+                labels: ['10 AM', '11 AM', '12 PM', '1 PM', '2 PM', '3 PM', '4 PM', '5 PM', '6 PM', '7 PM', '8 PM', '9 PM'],
+                data: [100, 130, 250, 270, 150, 120, 180, 220, 310, 270, 180, 120]
+            };
+
+            const weeklyOrders = {
+                labels: ['Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday', 'Sunday'],
+                data: [30, 45, 38, 42, 55, 68, 52]
+            };
+
+            // Create Top Selling Items Chart
+            const topSellingChart = new Chart(
+                document.getElementById('top-selling-chart'),
+                {
+                    type: 'bar',
+                    data: {
+                        labels: topSellingItems.labels,
+                        datasets: [{
+                            label: 'Number of Orders',
+                            data: topSellingItems.data,
+                            backgroundColor: 'rgba(54, 162, 235, 0.7)',
+                            borderColor: 'rgba(54, 162, 235, 1)',
+                            borderWidth: 1
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Orders'
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+            // Create Hourly Revenue Chart
+            const hourlyRevenueChart = new Chart(
+                document.getElementById('hourly-revenue-chart'),
+                {
+                    type: 'line',
+                    data: {
+                        labels: hourlyRevenue.labels,
+                        datasets: [{
+                            label: 'Revenue ($)',
+                            data: hourlyRevenue.data,
+                            backgroundColor: 'rgba(75, 192, 192, 0.2)',
+                            borderColor: 'rgba(75, 192, 192, 1)',
+                            borderWidth: 2,
+                            tension: 0.2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Revenue ($)'
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+            // Create Weekly Orders Chart
+            const weeklyOrdersChart = new Chart(
+                document.getElementById('weekly-orders-chart'),
+                {
+                    type: 'line',
+                    data: {
+                        labels: weeklyOrders.labels,
+                        datasets: [{
+                            label: 'Number of Orders',
+                            data: weeklyOrders.data,
+                            backgroundColor: 'rgba(255, 99, 132, 0.2)',
+                            borderColor: 'rgba(255, 99, 132, 1)',
+                            borderWidth: 2,
+                            tension: 0.2
+                        }]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        scales: {
+                            y: {
+                                beginAtZero: true,
+                                title: {
+                                    display: true,
+                                    text: 'Number of Orders'
+                                }
+                            }
+                        }
+                    }
+                }
+            );
+
+            // Update statistics based on mock data
+            document.getElementById('weekly-revenue').textContent = '$' + calculateWeeklyRevenue(hourlyRevenue.data);
+            document.getElementById('most-ordered').textContent = findMostOrdered(topSellingItems);
+            document.getElementById('total-orders').textContent = calculateTotalOrders(weeklyOrders.data);
+        }
+
+        function calculateWeeklyRevenue(hourlyData) {
+            // Mock calculation - in real app would use actual data
+            return hourlyData.reduce((sum, current) => sum + current, 0).toLocaleString();
+        }
+
+        function findMostOrdered(itemsData) {
+            const maxIndex = itemsData.data.indexOf(Math.max(...itemsData.data));
+            return itemsData.labels[maxIndex];
+        }
+
+        function calculateTotalOrders(ordersData) {
+            return ordersData.reduce((sum, current) => sum + current, 0);
+        }
+    </script>
+</body>
+</html>

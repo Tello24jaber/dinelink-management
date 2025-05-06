@@ -1,0 +1,530 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AI Insights Panel</title>
+    <style>
+        :root {
+            --primary-color: #3a0ca3;
+            --secondary-color: #4361ee;
+            --light-color: #f8f9fa;
+            --dark-color: #212529;
+            --success-color: #2a9d8f;
+            --warning-color: #e9c46a;
+            --danger-color: #e76f51;
+            --info-color: #4cc9f0;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+        
+        body {
+            background-color: #f0f2f5;
+        }
+        
+        .header {
+            background-color: var(--dark-color);
+            color: white;
+            padding: 1rem 2rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+        }
+        
+        .header h1 {
+            font-size: 1.5rem;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .container {
+            max-width: 900px;
+            margin: 2rem auto;
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            padding: 1.5rem;
+        }
+        
+        .filter-section {
+            display: flex;
+            gap: 0.5rem;
+            margin-bottom: 1.5rem;
+            flex-wrap: wrap;
+        }
+        
+        .filter-btn {
+            background-color: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 20px;
+            padding: 0.5rem 1rem;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .filter-btn:hover {
+            background-color: #e9ecef;
+        }
+        
+        .filter-btn.active {
+            background-color: var(--secondary-color);
+            color: white;
+            border-color: var(--secondary-color);
+        }
+        
+        .insights-container {
+            height: 400px;
+            overflow-y: auto;
+            padding: 1rem;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            background-color: #f8f9fa;
+        }
+        
+        .insight-message {
+            background-color: white;
+            border-radius: 8px;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+            animation: fadeIn 0.5s;
+            border-left: 4px solid var(--primary-color);
+        }
+        
+        .insight-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+        
+        .insight-icon {
+            font-size: 1.5rem;
+            margin-right: 0.5rem;
+        }
+        
+        .insight-tag {
+            margin-left: auto;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            font-weight: bold;
+        }
+        
+        .tag-sales {
+            background-color: rgba(74, 222, 128, 0.2);
+            color: #15803d;
+        }
+        
+        .tag-menu {
+            background-color: rgba(251, 146, 60, 0.2);
+            color: #9a3412;
+        }
+        
+        .tag-customer {
+            background-color: rgba(96, 165, 250, 0.2);
+            color: #1d4ed8;
+        }
+        
+        .insight-content {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        
+        .insight-timestamp {
+            font-size: 0.8rem;
+            color: #6c757d;
+            margin-top: 0.5rem;
+            text-align: right;
+        }
+        
+        .controls {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 1rem;
+        }
+        
+        .btn {
+            padding: 0.5rem 1rem;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: 500;
+            transition: all 0.2s;
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-color);
+            color: white;
+        }
+        
+        .btn-primary:hover {
+            background-color: #2d0991;
+        }
+        
+        .btn-secondary {
+            background-color: #e9ecef;
+            color: #495057;
+        }
+        
+        .btn-secondary:hover {
+            background-color: #dee2e6;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        
+        .typing-indicator {
+            display: flex;
+            padding: 1rem;
+            margin-bottom: 1rem;
+            align-items: center;
+        }
+        
+        .typing-indicator span {
+            height: 8px;
+            width: 8px;
+            background-color: var(--secondary-color);
+            border-radius: 50%;
+            display: inline-block;
+            margin: 0 2px;
+            opacity: 0.6;
+        }
+        
+        .typing-indicator span:nth-child(1) {
+            animation: bounce 1s infinite 0s;
+        }
+        
+        .typing-indicator span:nth-child(2) {
+            animation: bounce 1s infinite 0.2s;
+        }
+        
+        .typing-indicator span:nth-child(3) {
+            animation: bounce 1s infinite 0.4s;
+        }
+        
+        @keyframes bounce {
+            0%, 100% { transform: translateY(0); }
+            50% { transform: translateY(-5px); }
+        }
+        
+        .empty-state {
+            text-align: center;
+            padding: 2rem;
+            color: #6c757d;
+        }
+        
+        .empty-state p {
+            margin-top: 1rem;
+            font-size: 0.9rem;
+        }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1><span>🤖</span> AI Insights Panel</h1>
+        <div>
+            <button id="exportBtn" class="btn btn-secondary">
+                <span>📥</span> Export Insights
+            </button>
+        </div>
+    </div>
+
+    <div class="container">
+        <div class="filter-section">
+            <button class="filter-btn active" data-filter="all">All Insights</button>
+            <button class="filter-btn" data-filter="sales">Sales Tips</button>
+            <button class="filter-btn" data-filter="menu">Menu Suggestions</button>
+            <button class="filter-btn" data-filter="customer">Customer Behavior</button>
+        </div>
+        
+        <div class="insights-container" id="insightsContainer">
+            <div class="empty-state">
+                <h3>No insights yet</h3>
+                <p>Click "Generate Insight" to receive AI recommendations</p>
+            </div>
+        </div>
+        
+        <div class="controls">
+            <button id="clearBtn" class="btn btn-secondary">
+                <span>🧹</span> Clear All
+            </button>
+            <button id="generateBtn" class="btn btn-primary">
+                <span>💡</span> Generate Insight
+            </button>
+        </div>
+    </div>
+
+    <script>
+        // Mock data for simulating AI insights
+        const mockInsights = [
+            {
+                content: "Pizza is trending this week with a 27% increase in orders compared to last week.",
+                icon: "📊",
+                category: "sales"
+            },
+            {
+                content: "Low sales during evening hours (7-9 PM). Consider running a happy hour promotion during this time.",
+                icon: "⏰",
+                category: "sales"
+            },
+            {
+                content: "Try promoting fries—they've dropped by 40% compared to last month.",
+                icon: "🍟",
+                category: "menu"
+            },
+            {
+                content: "Customers who order salads are 3x more likely to add a dessert. Consider bundle promotions.",
+                icon: "🥗",
+                category: "customer"
+            },
+            {
+                content: "Tuesday shows the lowest foot traffic. Consider a 'Tuesday Special' to boost mid-week sales.",
+                icon: "📆",
+                category: "sales"
+            },
+            {
+                content: "Online orders peak between 12-1 PM. Ensure kitchen staffing is optimized for lunch rush.",
+                icon: "👨‍🍳",
+                category: "customer"
+            },
+            {
+                content: "Soft drinks have the highest profit margin but are only added to 40% of orders. Train staff to suggest beverages.",
+                icon: "🥤",
+                category: "menu"
+            },
+            {
+                content: "Average time between return visits is 12 days. Consider a loyalty program to increase frequency.",
+                icon: "🔄",
+                category: "customer"
+            },
+            {
+                content: "Vegetarian options are trending upward by 15% this month. Consider expanding your vegetarian menu.",
+                icon: "🥦",
+                category: "menu"
+            },
+            {
+                content: "Customer satisfaction scores drop by 20% during rush hour (6-7 PM). Consider additional staffing.",
+                icon: "😊",
+                category: "customer"
+            }
+        ];
+
+        // DOM Elements
+        const insightsContainer = document.getElementById('insightsContainer');
+        const generateBtn = document.getElementById('generateBtn');
+        const clearBtn = document.getElementById('clearBtn');
+        const exportBtn = document.getElementById('exportBtn');
+        const filterBtns = document.querySelectorAll('.filter-btn');
+
+        // Current filter
+        let currentFilter = 'all';
+        
+        // Track displayed insights to avoid duplicates
+        let displayedInsights = [];
+        
+        // Initialize
+        document.addEventListener('DOMContentLoaded', () => {
+            // Set up event listeners
+            generateBtn.addEventListener('click', generateInsight);
+            clearBtn.addEventListener('click', clearInsights);
+            exportBtn.addEventListener('click', exportInsights);
+            
+            filterBtns.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Update active filter
+                    filterBtns.forEach(b => b.classList.remove('active'));
+                    btn.classList.add('active');
+                    currentFilter = btn.dataset.filter;
+                    
+                    // Apply filter
+                    applyFilter();
+                });
+            });
+            
+            // Auto-generate first insight after 2 seconds
+            setTimeout(generateInsight, 2000);
+        });
+
+        // Generate a new insight
+        function generateInsight() {
+            // Clear empty state if it exists
+            const emptyState = insightsContainer.querySelector('.empty-state');
+            if (emptyState) {
+                insightsContainer.removeChild(emptyState);
+            }
+            
+            // Show typing indicator
+            showTypingIndicator();
+            
+            // Wait for 1-2 seconds before showing the insight
+            setTimeout(() => {
+                // Remove typing indicator
+                const indicator = document.querySelector('.typing-indicator');
+                if (indicator) {
+                    insightsContainer.removeChild(indicator);
+                }
+                
+                // Get available insights that haven't been displayed yet
+                let availableInsights = mockInsights.filter(insight => 
+                    !displayedInsights.includes(insight.content)
+                );
+                
+                // If all insights have been shown, reset
+                if (availableInsights.length === 0) {
+                    displayedInsights = [];
+                    availableInsights = [...mockInsights];
+                }
+                
+                // Select a random insight
+                const randomIndex = Math.floor(Math.random() * availableInsights.length);
+                const insight = availableInsights[randomIndex];
+                
+                // Add to displayed insights
+                displayedInsights.push(insight.content);
+                
+                // Create insight element
+                const insightElement = createInsightElement(insight);
+                
+                // Add to container
+                insightsContainer.appendChild(insightElement);
+                
+                // Scroll to bottom
+                insightsContainer.scrollTop = insightsContainer.scrollHeight;
+            }, Math.random() * 1000 + 1000); // Random delay between 1-2 seconds
+        }
+
+        // Show typing indicator
+        function showTypingIndicator() {
+            const typingIndicator = document.createElement('div');
+            typingIndicator.className = 'typing-indicator';
+            typingIndicator.innerHTML = `
+                <span></span>
+                <span></span>
+                <span></span>
+            `;
+            insightsContainer.appendChild(typingIndicator);
+            insightsContainer.scrollTop = insightsContainer.scrollHeight;
+        }
+
+        // Create an insight element
+        function createInsightElement(insight) {
+            const now = new Date();
+            const timeString = now.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+            
+            const element = document.createElement('div');
+            element.className = `insight-message ${insight.category}`;
+            
+            // Set tag class and text based on category
+            let tagClass = '';
+            let tagText = '';
+            
+            switch(insight.category) {
+                case 'sales':
+                    tagClass = 'tag-sales';
+                    tagText = 'Sales Tip';
+                    break;
+                case 'menu':
+                    tagClass = 'tag-menu';
+                    tagText = 'Menu Suggestion';
+                    break;
+                case 'customer':
+                    tagClass = 'tag-customer';
+                    tagText = 'Customer Behavior';
+                    break;
+            }
+            
+            element.innerHTML = `
+                <div class="insight-header">
+                    <div class="insight-icon">${insight.icon}</div>
+                    <div class="insight-tag ${tagClass}">${tagText}</div>
+                </div>
+                <div class="insight-content">${insight.content}</div>
+                <div class="insight-timestamp">${timeString}</div>
+            `;
+            
+            return element;
+        }
+
+        // Clear all insights
+        function clearInsights() {
+            while (insightsContainer.firstChild) {
+                insightsContainer.removeChild(insightsContainer.firstChild);
+            }
+            
+            // Add empty state back
+            insightsContainer.innerHTML = `
+                <div class="empty-state">
+                    <h3>No insights yet</h3>
+                    <p>Click "Generate Insight" to receive AI recommendations</p>
+                </div>
+            `;
+            
+            // Reset displayed insights
+            displayedInsights = [];
+        }
+
+        // Apply filter to insights
+        function applyFilter() {
+            const insights = insightsContainer.querySelectorAll('.insight-message');
+            insights.forEach(insight => {
+                if (currentFilter === 'all' || insight.classList.contains(currentFilter)) {
+                    insight.style.display = 'block';
+                } else {
+                    insight.style.display = 'none';
+                }
+            });
+        }
+
+        // Export insights as text/pdf
+        function exportInsights() {
+            // Get all visible insights
+            const insights = insightsContainer.querySelectorAll('.insight-message');
+            
+            // If no insights, alert user
+            if (insights.length === 0) {
+                alert('No insights to export');
+                return;
+            }
+            
+            // Create text content
+            let textContent = "AI INSIGHTS REPORT\n";
+            textContent += "Generated on " + new Date().toLocaleString() + "\n\n";
+            
+            insights.forEach(insight => {
+                if (insight.style.display !== 'none') {
+                    const category = insight.querySelector('.insight-tag').textContent;
+                    const content = insight.querySelector('.insight-content').textContent;
+                    const timestamp = insight.querySelector('.insight-timestamp').textContent;
+                    
+                    textContent += `[${category}] ${content} (${timestamp})\n\n`;
+                }
+            });
+            
+            // Create download link
+            const element = document.createElement('a');
+            element.setAttribute('href', 'data:text/plain;charset=utf-8,' + encodeURIComponent(textContent));
+            element.setAttribute('download', 'ai-insights-report.txt');
+            
+            element.style.display = 'none';
+            document.body.appendChild(element);
+            
+            element.click();
+            
+            document.body.removeChild(element);
+        }
+    </script>
+</body>
+</html>

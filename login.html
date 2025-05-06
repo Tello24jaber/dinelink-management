@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Management System - Login</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f5f5f5;
+            margin: 0;
+            padding: 0;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+        }
+
+        .container {
+            background-color: white;
+            border-radius: 8px;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            padding: 40px;
+            width: 400px;
+            max-width: 90%;
+        }
+
+        h1 {
+            color: #333;
+            text-align: center;
+            margin-bottom: 30px;
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: bold;
+            color: #555;
+        }
+
+        select, input {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            font-size: 16px;
+            box-sizing: border-box;
+        }
+
+        button {
+            background-color: #333;
+            color: white;
+            border: none;
+            padding: 12px 20px;
+            border-radius: 4px;
+            width: 100%;
+            font-size: 16px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+
+        button:hover {
+            background-color: #ffcc00;
+            color: #333;
+        }
+
+        .logo-container {
+            text-align: center;
+            margin-bottom: 20px;
+        }
+
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        .or-divider {
+            text-align: center;
+            margin: 20px 0;
+            position: relative;
+        }
+
+        .or-divider:before {
+            content: "";
+            position: absolute;
+            top: 50%;
+            left: 0;
+            right: 0;
+            height: 1px;
+            background-color: #ddd;
+            z-index: 0;
+        }
+
+        .or-divider span {
+            background-color: white;
+            padding: 0 15px;
+            position: relative;
+            z-index: 1;
+            color: #888;
+        }
+        
+        #manualRestaurantInput {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="logo-container">
+            <div class="logo">Restaurant Management System</div>
+        </div>
+        
+        <h1>Login</h1>
+        
+        <div class="form-group">
+            <label for="restaurantSelect">Select Restaurant:</label>
+            <select id="restaurantSelect">
+                <option value="">-- Select a restaurant --</option>
+                <option value="Italian Delight">Italian Delight</option>
+                <option value="Sushi Paradise">Sushi Paradise</option>
+                <option value="Burger Haven">Burger Haven</option>
+                <option value="Taco Fiesta">Taco Fiesta</option>
+                <option value="Pizza Palace">Pizza Palace</option>
+                <option value="other">Other (Enter manually)</option>
+            </select>
+        </div>
+        
+        <div class="form-group" id="manualRestaurantInput">
+            <label for="restaurantName">Restaurant Name:</label>
+            <input type="text" id="restaurantName" placeholder="Enter restaurant name">
+        </div>
+
+        <div class="form-group">
+            <label for="username">Username:</label>
+            <input type="text" id="username" placeholder="Enter your username">
+        </div>
+        
+        <div class="form-group">
+            <label for="password">Password:</label>
+            <input type="password" id="password" placeholder="Enter your password">
+        </div>
+        
+        <button id="loginButton">Login</button>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            const restaurantSelect = document.getElementById('restaurantSelect');
+            const manualRestaurantInput = document.getElementById('manualRestaurantInput');
+            const restaurantNameInput = document.getElementById('restaurantName');
+            const loginButton = document.getElementById('loginButton');
+            
+            // Show/hide manual input based on selection
+            restaurantSelect.addEventListener('change', function() {
+                if (this.value === 'other') {
+                    manualRestaurantInput.style.display = 'block';
+                } else {
+                    manualRestaurantInput.style.display = 'none';
+                }
+            });
+            
+            // Handle login
+            loginButton.addEventListener('click', function() {
+                let restaurantName;
+                
+                if (restaurantSelect.value === 'other') {
+                    restaurantName = restaurantNameInput.value.trim();
+                } else {
+                    restaurantName = restaurantSelect.value;
+                }
+                
+                // Validation
+                if (!restaurantName) {
+                    alert('Please select or enter a restaurant name.');
+                    return;
+                }
+                
+                const username = document.getElementById('username').value.trim();
+                const password = document.getElementById('password').value;
+                
+                if (!username) {
+                    alert('Please enter a username.');
+                    return;
+                }
+                
+                if (!password) {
+                    alert('Please enter a password.');
+                    return;
+                }
+                
+                // Save restaurant name to localStorage
+                localStorage.setItem('restaurantName', restaurantName);
+                localStorage.setItem('username', username);
+                
+                // Redirect to dashboard
+                window.location.href = 'dashboard.html';
+            });
+        });
+    </script>
+</body>
+</html>

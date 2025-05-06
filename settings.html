@@ -1,0 +1,683 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Settings</title>
+    <style>
+        :root {
+            --primary: #3b82f6;
+            --primary-dark: #2563eb;
+            --secondary: #6b7280;
+            --background: #f9fafb;
+            --card-bg: #ffffff;
+            --text: #1f2937;
+            --border: #e5e7eb;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+        }
+
+        body {
+            background-color: var(--background);
+            color: var(--text);
+            line-height: 1.6;
+        }
+
+        .container {
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+
+        header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        h1 {
+            font-size: 24px;
+            color: var(--text);
+        }
+
+        .card {
+            background: var(--card-bg);
+            border-radius: 8px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.05);
+            padding: 24px;
+            margin-bottom: 24px;
+        }
+
+        .card-header {
+            display: flex;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .card-header h2 {
+            font-size: 18px;
+            margin-left: 12px;
+            color: var(--text);
+        }
+
+        .card-header svg {
+            color: var(--primary);
+        }
+
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        input, select {
+            width: 100%;
+            padding: 12px;
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            font-size: 16px;
+            color: var(--text);
+        }
+
+        input:focus, select:focus {
+            outline: none;
+            border-color: var(--primary);
+        }
+
+        button {
+            background-color: var(--primary);
+            color: white;
+            border: none;
+            border-radius: 6px;
+            padding: 12px 24px;
+            font-size: 16px;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        button:hover {
+            background-color: var(--primary-dark);
+        }
+
+        .button-secondary {
+            background-color: var(--secondary);
+        }
+
+        .qr-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 20px;
+        }
+
+        .qr-item {
+            background: white;
+            padding: 15px;
+            border-radius: 6px;
+            text-align: center;
+            border: 1px solid var(--border);
+        }
+
+        .qr-item img {
+            width: 100%;
+            max-width: 120px;
+            height: auto;
+            margin-bottom: 12px;
+        }
+
+        .qr-item h3 {
+            font-size: 16px;
+            margin-bottom: 6px;
+        }
+
+        .qr-item p {
+            font-size: 14px;
+            color: var(--secondary);
+        }
+
+        .logo-preview {
+            display: flex;
+            align-items: center;
+            margin-top: 20px;
+        }
+
+        .logo-preview img {
+            width: 80px;
+            height: 80px;
+            border-radius: 8px;
+            object-fit: cover;
+            border: 1px solid var(--border);
+        }
+
+        .logo-preview-text {
+            margin-left: 15px;
+        }
+
+        .time-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+        }
+
+        .day-hours {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 12px;
+        }
+
+        .time-inputs {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .time-inputs select {
+            width: 110px;
+        }
+
+        .time-format-toggle {
+            display: flex;
+            align-items: center;
+            justify-content: flex-end;
+            margin-bottom: 15px;
+        }
+
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 50px;
+            height: 24px;
+            margin-left: 10px;
+        }
+
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+
+        .slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: #ccc;
+            transition: .4s;
+            border-radius: 24px;
+        }
+
+        .slider:before {
+            position: absolute;
+            content: "";
+            height: 16px;
+            width: 16px;
+            left: 4px;
+            bottom: 4px;
+            background-color: white;
+            transition: .4s;
+            border-radius: 50%;
+        }
+
+        input:checked + .slider {
+            background-color: var(--primary);
+        }
+
+        input:checked + .slider:before {
+            transform: translateX(26px);
+        }
+
+        .save-button-container {
+            display: flex;
+            justify-content: flex-end;
+        }
+
+        .download-all {
+            display: flex;
+            justify-content: center;
+            margin-top: 20px;
+        }
+
+        @media (max-width: 768px) {
+            .time-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .qr-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>Restaurant Settings</h1>
+            <div id="restaurant-name-display"></div>
+        </header>
+
+        <div class="card">
+            <div class="card-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path>
+                    <path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path>
+                </svg>
+                <h2>Restaurant Information</h2>
+            </div>
+            
+            <form id="restaurant-info-form">
+                <div class="form-group">
+                    <label for="restaurant-name">Restaurant Name</label>
+                    <input type="text" id="restaurant-name" placeholder="Enter restaurant name">
+                </div>
+                
+                <div class="form-group">
+                    <label for="logo-url">Logo URL</label>
+                    <input type="text" id="logo-url" placeholder="Enter logo URL">
+                </div>
+                
+                <div class="logo-preview">
+                    <img id="logo-preview-img" src="/api/placeholder/80/80" alt="Logo preview">
+                    <div class="logo-preview-text">
+                        <p>Logo Preview</p>
+                        <p id="logo-preview-name"></p>
+                    </div>
+                </div>
+                
+                <div class="save-button-container">
+                    <button type="submit">Save Changes</button>
+                </div>
+            </form>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+                    <line x1="16" y1="2" x2="16" y2="6"></line>
+                    <line x1="8" y1="2" x2="8" y2="6"></line>
+                    <line x1="3" y1="10" x2="21" y2="10"></line>
+                </svg>
+                <h2>Working Hours</h2>
+            </div>
+            
+            <div class="time-format-toggle">
+                <span>24-hour format</span>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="time-format-toggle">
+                    <span class="slider"></span>
+                </label>
+            </div>
+            
+            <div class="time-grid">
+                <div class="weekday-hours">
+                    <div class="day-hours">
+                        <span>Monday</span>
+                        <div class="time-inputs">
+                            <select class="open-time" data-day="monday">
+                                <option value="9:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                            </select>
+                            <span>to</span>
+                            <select class="close-time" data-day="monday">
+                                <option value="21:00">9:00 PM</option>
+                                <option value="22:00">10:00 PM</option>
+                                <option value="23:00">11:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="day-hours">
+                        <span>Tuesday</span>
+                        <div class="time-inputs">
+                            <select class="open-time" data-day="tuesday">
+                                <option value="9:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                            </select>
+                            <span>to</span>
+                            <select class="close-time" data-day="tuesday">
+                                <option value="21:00">9:00 PM</option>
+                                <option value="22:00">10:00 PM</option>
+                                <option value="23:00">11:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="day-hours">
+                        <span>Wednesday</span>
+                        <div class="time-inputs">
+                            <select class="open-time" data-day="wednesday">
+                                <option value="9:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                            </select>
+                            <span>to</span>
+                            <select class="close-time" data-day="wednesday">
+                                <option value="21:00">9:00 PM</option>
+                                <option value="22:00">10:00 PM</option>
+                                <option value="23:00">11:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="day-hours">
+                        <span>Thursday</span>
+                        <div class="time-inputs">
+                            <select class="open-time" data-day="thursday">
+                                <option value="9:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                            </select>
+                            <span>to</span>
+                            <select class="close-time" data-day="thursday">
+                                <option value="21:00">9:00 PM</option>
+                                <option value="22:00">10:00 PM</option>
+                                <option value="23:00">11:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="weekend-hours">
+                    <div class="day-hours">
+                        <span>Friday</span>
+                        <div class="time-inputs">
+                            <select class="open-time" data-day="friday">
+                                <option value="9:00">9:00 AM</option>
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                            </select>
+                            <span>to</span>
+                            <select class="close-time" data-day="friday">
+                                <option value="21:00">9:00 PM</option>
+                                <option value="22:00">10:00 PM</option>
+                                <option value="23:00">11:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="day-hours">
+                        <span>Saturday</span>
+                        <div class="time-inputs">
+                            <select class="open-time" data-day="saturday">
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="12:00">12:00 PM</option>
+                            </select>
+                            <span>to</span>
+                            <select class="close-time" data-day="saturday">
+                                <option value="22:00">10:00 PM</option>
+                                <option value="23:00">11:00 PM</option>
+                                <option value="23:59">11:59 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="day-hours">
+                        <span>Sunday</span>
+                        <div class="time-inputs">
+                            <select class="open-time" data-day="sunday">
+                                <option value="10:00">10:00 AM</option>
+                                <option value="11:00">11:00 AM</option>
+                                <option value="12:00">12:00 PM</option>
+                            </select>
+                            <span>to</span>
+                            <select class="close-time" data-day="sunday">
+                                <option value="21:00">9:00 PM</option>
+                                <option value="22:00">10:00 PM</option>
+                                <option value="23:00">11:00 PM</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="save-button-container">
+                <button id="save-hours">Save Hours</button>
+            </div>
+        </div>
+
+        <div class="card">
+            <div class="card-header">
+                <svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                    <path d="M3 9h18v10a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V9Z"></path>
+                    <path d="m3 9 2.45-4.9A2 2 0 0 1 7.24 3h9.52a2 2 0 0 1 1.8 1.1L21 9"></path>
+                    <path d="M12 3v6"></path>
+                </svg>
+                <h2>Table QR Codes</h2>
+            </div>
+            
+            <div class="qr-grid" id="qr-codes-container">
+                <!-- QR codes will be generated here -->
+            </div>
+            
+            <div class="download-all">
+                <button id="download-all-qr" class="button-secondary">Download All QR Codes</button>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Initialize with default data if not present in localStorage
+        if (!localStorage.getItem('restaurantName')) {
+            localStorage.setItem('restaurantName', 'Tasty Bites Restaurant');
+            localStorage.setItem('logoUrl', 'https://via.placeholder.com/80');
+        }
+
+        // DOM Elements
+        const restaurantNameInput = document.getElementById('restaurant-name');
+        const logoUrlInput = document.getElementById('logo-url');
+        const logoPreviewImg = document.getElementById('logo-preview-img');
+        const logoPreviewName = document.getElementById('logo-preview-name');
+        const restaurantNameDisplay = document.getElementById('restaurant-name-display');
+        const restaurantInfoForm = document.getElementById('restaurant-info-form');
+        const qrCodesContainer = document.getElementById('qr-codes-container');
+        const timeFormatToggle = document.getElementById('time-format-toggle');
+        const downloadAllBtn = document.getElementById('download-all-qr');
+        const saveHoursBtn = document.getElementById('save-hours');
+
+        // Load current restaurant data
+        function loadRestaurantData() {
+            const restaurantName = localStorage.getItem('restaurantName');
+            const logoUrl = localStorage.getItem('logoUrl');
+            
+            restaurantNameInput.value = restaurantName;
+            logoUrlInput.value = logoUrl;
+            logoPreviewImg.src = logoUrl || '/api/placeholder/80/80';
+            logoPreviewName.textContent = restaurantName;
+            restaurantNameDisplay.textContent = restaurantName;
+        }
+
+        // Update logo preview on input change
+        logoUrlInput.addEventListener('input', function() {
+            const url = this.value.trim();
+            if (url) {
+                logoPreviewImg.src = url;
+            } else {
+                logoPreviewImg.src = '/api/placeholder/80/80';
+            }
+        });
+
+        // Update restaurant name preview
+        restaurantNameInput.addEventListener('input', function() {
+            logoPreviewName.textContent = this.value;
+        });
+
+        // Save restaurant info
+        restaurantInfoForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const name = restaurantNameInput.value.trim();
+            const logoUrl = logoUrlInput.value.trim();
+            
+            if (name) {
+                localStorage.setItem('restaurantName', name);
+                localStorage.setItem('logoUrl', logoUrl || '/api/placeholder/80/80');
+                
+                restaurantNameDisplay.textContent = name;
+                
+                showNotification('Restaurant information updated successfully!');
+            } else {
+                alert('Restaurant name cannot be empty');
+            }
+        });
+
+        // Generate QR codes for tables
+        function generateQRCodes() {
+            qrCodesContainer.innerHTML = '';
+            
+            for (let i = 1; i <= 10; i++) {
+                const qrItem = document.createElement('div');
+                qrItem.className = 'qr-item';
+                
+                // Generate fake QR code URL (using placeholder service)
+                const qrImageUrl = `/api/placeholder/120/120`;
+                const menuUrl = `/menu/${i}`;
+                
+                qrItem.innerHTML = `
+                    <img src="${qrImageUrl}" alt="QR Code for Table ${i}">
+                    <h3>Table ${i}</h3>
+                    <p>${menuUrl}</p>
+                `;
+                
+                qrCodesContainer.appendChild(qrItem);
+            }
+        }
+
+        // Toggle time format between 12h and 24h
+        timeFormatToggle.addEventListener('change', function() {
+            const is24Hour = this.checked;
+            updateTimeFormat(is24Hour);
+        });
+
+        function updateTimeFormat(is24Hour) {
+            const openTimeSelects = document.querySelectorAll('.open-time');
+            const closeTimeSelects = document.querySelectorAll('.close-time');
+            
+            const updateOptions = (select, times) => {
+                const currentValue = select.value;
+                select.innerHTML = '';
+                
+                times.forEach(time => {
+                    const option = document.createElement('option');
+                    option.value = time.value;
+                    option.textContent = is24Hour ? time.format24 : time.format12;
+                    select.appendChild(option);
+                });
+                
+                select.value = currentValue;
+            };
+            
+            const openTimes = [
+                { value: '8:00', format12: '8:00 AM', format24: '08:00' },
+                { value: '9:00', format12: '9:00 AM', format24: '09:00' },
+                { value: '10:00', format12: '10:00 AM', format24: '10:00' },
+                { value: '11:00', format12: '11:00 AM', format24: '11:00' },
+                { value: '12:00', format12: '12:00 PM', format24: '12:00' }
+            ];
+            
+            const closeTimes = [
+                { value: '20:00', format12: '8:00 PM', format24: '20:00' },
+                { value: '21:00', format12: '9:00 PM', format24: '21:00' },
+                { value: '22:00', format12: '10:00 PM', format24: '22:00' },
+                { value: '23:00', format12: '11:00 PM', format24: '23:00' },
+                { value: '23:59', format12: '11:59 PM', format24: '23:59' }
+            ];
+            
+            openTimeSelects.forEach(select => updateOptions(select, openTimes));
+            closeTimeSelects.forEach(select => updateOptions(select, closeTimes));
+        }
+
+        // Save hours
+        saveHoursBtn.addEventListener('click', function() {
+            const hours = {};
+            const days = ['monday', 'tuesday', 'wednesday', 'thursday', 'friday', 'saturday', 'sunday'];
+            
+            days.forEach(day => {
+                const openTime = document.querySelector(`.open-time[data-day="${day}"]`).value;
+                const closeTime = document.querySelector(`.close-time[data-day="${day}"]`).value;
+                
+                hours[day] = { open: openTime, close: closeTime };
+            });
+            
+            localStorage.setItem('workingHours', JSON.stringify(hours));
+            showNotification('Working hours updated successfully!');
+        });
+
+        // Download all QR codes (simulated)
+        downloadAllBtn.addEventListener('click', function() {
+            showNotification('Preparing QR codes for download...');
+            
+            // Simulate download delay
+            setTimeout(() => {
+                showNotification('All QR codes downloaded successfully!');
+            }, 1500);
+        });
+
+        // Show notification
+        function showNotification(message) {
+            const notification = document.createElement('div');
+            notification.textContent = message;
+            notification.style.position = 'fixed';
+            notification.style.bottom = '20px';
+            notification.style.right = '20px';
+            notification.style.backgroundColor = '#4caf50';
+            notification.style.color = 'white';
+            notification.style.padding = '12px 24px';
+            notification.style.borderRadius = '4px';
+            notification.style.boxShadow = '0 2px 10px rgba(0,0,0,0.1)';
+            notification.style.zIndex = '1000';
+            
+            document.body.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.style.opacity = '0';
+                notification.style.transition = 'opacity 0.5s';
+                
+                setTimeout(() => {
+                    document.body.removeChild(notification);
+                }, 500);
+            }, 3000);
+        }
+
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', function() {
+            loadRestaurantData();
+            generateQRCodes();
+            
+            // Load working hours if available
+            const savedHours = localStorage.getItem('workingHours');
+            if (savedHours) {
+                const hours = JSON.parse(savedHours);
+                
+                for (const day in hours) {
+                    const openSelect = document.querySelector(`.open-time[data-day="${day}"]`);
+                    const closeSelect = document.querySelector(`.close-time[data-day="${day}"]`);
+                    
+                    if (openSelect && closeSelect) {
+                        openSelect.value = hours[day].open;
+                        closeSelect.value = hours[day].close;
+                    }
+                }
+            }
+        });
+    </script>
+</body>
+</html>

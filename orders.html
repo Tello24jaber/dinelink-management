@@ -1,0 +1,587 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Restaurant Order Monitoring</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f5f5f5;
+        }
+        
+        .navbar {
+            background-color: #333;
+            color: white;
+            padding: 15px 0;
+        }
+        
+        .navbar-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 0 20px;
+        }
+        
+        .navbar-brand {
+            font-size: 1.5rem;
+            font-weight: bold;
+        }
+        
+        .navbar-links {
+            display: flex;
+            gap: 20px;
+        }
+        
+        .navbar-links a {
+            color: white;
+            text-decoration: none;
+            transition: color 0.3s;
+        }
+        
+        .navbar-links a:hover {
+            color: #ffd700;
+        }
+        
+        .container {
+            max-width: 1200px;
+            margin: 20px auto;
+            padding: 20px;
+            background-color: white;
+            border-radius: 5px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+        
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+        
+        .restaurant-name {
+            font-size: 1.8rem;
+            font-weight: bold;
+        }
+        
+        .filter-controls {
+            display: flex;
+            gap: 15px;
+            margin-bottom: 20px;
+            align-items: center;
+        }
+        
+        .filter-label {
+            font-weight: bold;
+        }
+        
+        select, input {
+            padding: 8px;
+            border-radius: 4px;
+            border: 1px solid #ddd;
+        }
+        
+        .status-filter button {
+            padding: 8px 12px;
+            border: none;
+            background-color: #f0f0f0;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: background-color 0.3s;
+        }
+        
+        .status-filter button.active {
+            background-color: #333;
+            color: white;
+        }
+        
+        .status-filter button:hover {
+            background-color: #ffd700;
+        }
+        
+        .orders-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        
+        .order-card {
+            background-color: white;
+            border-radius: 5px;
+            padding: 15px;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+            border-left: 5px solid #ddd;
+            transition: transform 0.2s;
+        }
+        
+        .order-card:hover {
+            transform: translateY(-3px);
+        }
+        
+        .order-card.new {
+            border-left-color: #ff4d4d;
+        }
+        
+        .order-card.in-progress {
+            border-left-color: #ffc107;
+        }
+        
+        .order-card.ready {
+            border-left-color: #28a745;
+        }
+        
+        .order-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+        
+        .order-id {
+            font-weight: bold;
+            font-size: 1.1rem;
+        }
+        
+        .table-number {
+            background-color: #333;
+            color: white;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        
+        .order-time {
+            color: #777;
+            font-size: 0.9rem;
+            margin-bottom: 10px;
+        }
+        
+        .order-items {
+            margin-bottom: 15px;
+        }
+        
+        .order-item {
+            padding: 5px 0;
+            border-bottom: 1px dashed #eee;
+        }
+        
+        .order-item:last-child {
+            border-bottom: none;
+        }
+        
+        .item-quantity {
+            font-weight: bold;
+            margin-right: 5px;
+        }
+        
+        .status-tag {
+            display: inline-block;
+            padding: 5px 10px;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: bold;
+            text-transform: uppercase;
+        }
+        
+        .status-new {
+            background-color: #ffebee;
+            color: #d32f2f;
+        }
+        
+        .status-in-progress {
+            background-color: #fff8e1;
+            color: #ff8f00;
+        }
+        
+        .status-ready {
+            background-color: #e8f5e9;
+            color: #2e7d32;
+        }
+        
+        .order-actions {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 15px;
+        }
+        
+        .order-actions button {
+            padding: 8px 15px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .update-status {
+            background-color: #007bff;
+            color: white;
+        }
+        
+        .update-status:hover {
+            background-color: #0056b3;
+        }
+        
+        .complete-order {
+            background-color: #28a745;
+            color: white;
+        }
+        
+        .complete-order:hover {
+            background-color: #218838;
+        }
+        
+        .new-order-alert {
+            background-color: #ffebee;
+            color: #d32f2f;
+            padding: 10px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            animation: pulse 2s infinite;
+            display: none;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.6; }
+            100% { opacity: 1; }
+        }
+        
+        .hidden {
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <nav class="navbar">
+        <div class="navbar-content">
+            <div class="navbar-brand">Restaurant Hub</div>
+            <div class="navbar-links">
+                <a href="#">Dashboard</a>
+                <a href="#">Orders</a>
+                <a href="#">Menu</a>
+                <a href="#">Tables</a>
+                <a href="#">Settings</a>
+            </div>
+        </div>
+    </nav>
+    
+    <div class="container">
+        <div class="header">
+            <div class="restaurant-name" id="restaurant-name">Loading...</div>
+            <div id="current-time">Loading...</div>
+        </div>
+        
+        <div class="new-order-alert" id="new-order-alert">
+            <strong>New Order Alert!</strong> You have received a new order. Please check the orders list.
+        </div>
+        
+        <div class="filter-controls">
+            <div>
+                <span class="filter-label">Filter by Status:</span>
+                <div class="status-filter">
+                    <button class="status-btn active" data-status="all">All</button>
+                    <button class="status-btn" data-status="new">New</button>
+                    <button class="status-btn" data-status="in-progress">In Progress</button>
+                    <button class="status-btn" data-status="ready">Ready</button>
+                </div>
+            </div>
+            
+            <div>
+                <span class="filter-label">Table Number:</span>
+                <input type="number" id="table-filter" min="1" placeholder="Enter table #">
+            </div>
+        </div>
+        
+        <div class="orders-grid" id="orders-container">
+            <!-- Orders will be populated here -->
+        </div>
+    </div>
+
+    <script>
+        // Simulate restaurant name from localStorage
+        const restaurantNames = [
+            "Bella Cucina", "Seaside Grill", "Urban Plate", "Golden Dragon", 
+            "Spice Route", "The Hungry Bear", "Fresh & Tasty", "Harbor View"
+        ];
+        const randomRestaurant = restaurantNames[Math.floor(Math.random() * restaurantNames.length)];
+        localStorage.setItem('restaurantName', randomRestaurant);
+        
+        // Mock menu items
+        const menuItems = [
+            { name: "Classic Burger", category: "Main" },
+            { name: "Margherita Pizza", category: "Main" },
+            { name: "Caesar Salad", category: "Starter" },
+            { name: "Garlic Bread", category: "Side" },
+            { name: "Chicken Wings", category: "Appetizer" },
+            { name: "Pasta Carbonara", category: "Main" },
+            { name: "Fish & Chips", category: "Main" },
+            { name: "Chocolate Cake", category: "Dessert" },
+            { name: "Ice Cream Sundae", category: "Dessert" },
+            { name: "French Fries", category: "Side" },
+            { name: "Onion Rings", category: "Side" },
+            { name: "Chicken Curry", category: "Main" },
+            { name: "Vegetable Soup", category: "Starter" },
+            { name: "Cheesecake", category: "Dessert" },
+            { name: "Sprite", category: "Beverage" },
+            { name: "Coca Cola", category: "Beverage" },
+            { name: "Lemonade", category: "Beverage" }
+        ];
+        
+        // Generate a random order
+        function generateRandomOrder(id) {
+            const tableNumber = Math.floor(Math.random() * 15) + 1;
+            const itemCount = Math.floor(Math.random() * 4) + 1;
+            const statuses = ["new", "in-progress", "ready"];
+            const status = statuses[Math.floor(Math.random() * statuses.length)];
+            
+            // Generate order items
+            const items = [];
+            for (let i = 0; i < itemCount; i++) {
+                const randomItem = menuItems[Math.floor(Math.random() * menuItems.length)];
+                const quantity = Math.floor(Math.random() * 3) + 1;
+                items.push({
+                    name: randomItem.name,
+                    quantity: quantity,
+                    notes: Math.random() > 0.7 ? "Special request" : ""
+                });
+            }
+            
+            // Add a beverage with 70% probability
+            if (Math.random() > 0.3) {
+                const beverages = menuItems.filter(item => item.category === "Beverage");
+                const randomBeverage = beverages[Math.floor(Math.random() * beverages.length)];
+                items.push({
+                    name: randomBeverage.name,
+                    quantity: Math.floor(Math.random() * 3) + 1,
+                    notes: ""
+                });
+            }
+            
+            // Generate a timestamp within the last hour
+            const now = new Date();
+            const orderTime = new Date(now - Math.floor(Math.random() * 60 * 60 * 1000));
+            
+            return {
+                id: id,
+                tableNumber: tableNumber,
+                items: items,
+                status: status,
+                time: orderTime
+            };
+        }
+        
+        // Generate initial orders
+        let orders = [];
+        for (let i = 1; i <= 8; i++) {
+            orders.push(generateRandomOrder(i));
+        }
+        
+        // Update the restaurant name
+        document.getElementById('restaurant-name').textContent = localStorage.getItem('restaurantName') || 'Restaurant';
+        
+        // Format time
+        function formatTime(date) {
+            return date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+        }
+        
+        // Update current time
+        function updateCurrentTime() {
+            const now = new Date();
+            document.getElementById('current-time').textContent = now.toLocaleDateString() + ' ' + formatTime(now);
+        }
+        
+        // Render orders
+        function renderOrders(ordersList) {
+            const container = document.getElementById('orders-container');
+            container.innerHTML = '';
+            
+            if (ordersList.length === 0) {
+                container.innerHTML = '<p>No orders match your filter criteria.</p>';
+                return;
+            }
+            
+            ordersList.forEach(order => {
+                const orderCard = document.createElement('div');
+                orderCard.className = `order-card ${order.status}`;
+                orderCard.dataset.status = order.status;
+                orderCard.dataset.table = order.tableNumber;
+                
+                const orderHeader = `
+                    <div class="order-header">
+                        <div class="order-id">Order #${order.id}</div>
+                        <div class="table-number">Table ${order.tableNumber}</div>
+                    </div>
+                    <div class="order-time">${formatTime(order.time)}</div>
+                `;
+                
+                let orderItems = '<div class="order-items">';
+                order.items.forEach(item => {
+                    orderItems += `
+                        <div class="order-item">
+                            <span class="item-quantity">x${item.quantity}</span>
+                            ${item.name}
+                            ${item.notes ? `<div class="item-notes">${item.notes}</div>` : ''}
+                        </div>
+                    `;
+                });
+                orderItems += '</div>';
+                
+                const statusClass = `status-${order.status}`;
+                const statusText = order.status.replace('-', ' ');
+                
+                const statusTag = `
+                    <div class="status-tag ${statusClass}">
+                        ${statusText}
+                    </div>
+                `;
+                
+                // Create different buttons based on current status
+                let actionButtons = '';
+                if (order.status === 'new') {
+                    actionButtons = `
+                        <button class="update-status" data-order-id="${order.id}" data-new-status="in-progress">Start Preparing</button>
+                    `;
+                } else if (order.status === 'in-progress') {
+                    actionButtons = `
+                        <button class="update-status" data-order-id="${order.id}" data-new-status="ready">Mark as Ready</button>
+                    `;
+                } else if (order.status === 'ready') {
+                    actionButtons = `
+                        <button class="complete-order" data-order-id="${order.id}">Complete Order</button>
+                    `;
+                }
+                
+                const orderActions = `
+                    <div class="order-actions">
+                        ${actionButtons}
+                    </div>
+                `;
+                
+                orderCard.innerHTML = orderHeader + orderItems + statusTag + orderActions;
+                container.appendChild(orderCard);
+            });
+            
+            // Add event listeners to the new buttons
+            document.querySelectorAll('.update-status').forEach(button => {
+                button.addEventListener('click', updateOrderStatus);
+            });
+            
+            document.querySelectorAll('.complete-order').forEach(button => {
+                button.addEventListener('click', completeOrder);
+            });
+        }
+        
+        // Filter orders
+        function filterOrders() {
+            const statusFilter = document.querySelector('.status-btn.active').dataset.status;
+            const tableFilter = document.getElementById('table-filter').value;
+            
+            let filteredOrders = [...orders];
+            
+            // Filter by status
+            if (statusFilter !== 'all') {
+                filteredOrders = filteredOrders.filter(order => order.status === statusFilter);
+            }
+            
+            // Filter by table number
+            if (tableFilter) {
+                filteredOrders = filteredOrders.filter(order => order.tableNumber.toString() === tableFilter);
+            }
+            
+            renderOrders(filteredOrders);
+        }
+        
+        // Update order status
+        function updateOrderStatus(event) {
+            const orderId = parseInt(event.target.dataset.orderId);
+            const newStatus = event.target.dataset.newStatus;
+            
+            const orderIndex = orders.findIndex(order => order.id === orderId);
+            if (orderIndex !== -1) {
+                orders[orderIndex].status = newStatus;
+                filterOrders();
+            }
+        }
+        
+        // Complete order (remove from list)
+        function completeOrder(event) {
+            const orderId = parseInt(event.target.dataset.orderId);
+            orders = orders.filter(order => order.id !== orderId);
+            filterOrders();
+        }
+        
+        // Add a new random order
+        function addRandomOrder() {
+            const newOrderId = orders.length > 0 ? Math.max(...orders.map(order => order.id)) + 1 : 1;
+            const newOrder = generateRandomOrder(newOrderId);
+            newOrder.status = "new"; // Force new status
+            orders.unshift(newOrder);
+            
+            // Show the new order alert
+            const alert = document.getElementById('new-order-alert');
+            alert.style.display = 'block';
+            
+            // Hide the alert after 5 seconds
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
+            
+            filterOrders();
+        }
+        
+        // Initialize the page
+        document.addEventListener('DOMContentLoaded', () => {
+            updateCurrentTime();
+            setInterval(updateCurrentTime, 1000);
+            
+            renderOrders(orders);
+            
+            // Add event listeners for filter buttons
+            document.querySelectorAll('.status-btn').forEach(button => {
+                button.addEventListener('click', (e) => {
+                    document.querySelectorAll('.status-btn').forEach(btn => btn.classList.remove('active'));
+                    e.target.classList.add('active');
+                    filterOrders();
+                });
+            });
+            
+            // Add event listener for table filter
+            document.getElementById('table-filter').addEventListener('input', filterOrders);
+            
+            // Simulate new orders every 25-45 seconds
+            setInterval(() => {
+                if (Math.random() > 0.5) { // 50% chance of getting a new order
+                    addRandomOrder();
+                }
+            }, Math.floor(Math.random() * 20000) + 25000);
+            
+            // Simulate order status changes every 15-30 seconds
+            setInterval(() => {
+                if (orders.length > 0 && Math.random() > 0.3) {
+                    // Find orders that can be updated
+                    const updatableOrders = orders.filter(order => order.status !== 'ready');
+                    
+                    if (updatableOrders.length > 0) {
+                        // Randomly pick an order to update
+                        const randomOrder = updatableOrders[Math.floor(Math.random() * updatableOrders.length)];
+                        
+                        // Update the status
+                        if (randomOrder.status === 'new') {
+                            randomOrder.status = 'in-progress';
+                        } else if (randomOrder.status === 'in-progress') {
+                            randomOrder.status = 'ready';
+                        }
+                        
+                        filterOrders();
+                    }
+                }
+            }, Math.floor(Math.random() * 15000) + 15000);
+        });
+    </script>
+</body>
+</html>
