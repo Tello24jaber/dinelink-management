@@ -203,7 +203,7 @@
     <div id="navbar-container"></div>
 
     <script>
-      fetch('components/nav.html')
+      fetch('/nav.html')
         .then(res => res.text())
         .then(html => {
           document.getElementById('navbar-container').innerHTML = html;
