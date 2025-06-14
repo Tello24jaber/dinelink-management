@@ -27,44 +27,7 @@
             color: var(--text-dark);
         }
 
-        .navbar {
-            background-color: var(--primary-color);
-            color: var(--text-light);
-            padding: 1rem 0;
-            box-shadow: var(--shadow);
-        }
-
-        .navbar .container {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
-
-        .navbar-brand {
-            font-size: 1.5rem;
-            font-weight: bold;
-        }
-
-        .navbar-menu {
-            display: flex;
-            list-style: none;
-        }
-
-        .navbar-menu li {
-            margin-left: 1.5rem;
-        }
-
-        .navbar-menu a {
-            color: var(--text-light);
-            text-decoration: none;
-            transition: color 0.3s;
-            padding: 0.5rem 0;
-        }
-
-        .navbar-menu a:hover {
-            color: var(--accent-color);
-        }
-
+       
         .container {
             max-width: 1200px;
             margin: 0 auto;
@@ -172,18 +135,17 @@
     </style>
 </head>
 <body>
-    <nav class="navbar">
-        <div class="container">
-            <div class="navbar-brand">Restaurant Dashboard</div>
-            <ul class="navbar-menu">
-                <li><a href="#">Dashboard</a></li>
-                <li><a href="#">Orders</a></li>
-                <li><a href="#">Menu</a></li>
-                <li><a href="#">Reports</a></li>
-                <li><a href="#">Settings</a></li>
-            </ul>
-        </div>
-    </nav>
+   
+<div id="navbar-container"></div>
+
+<script>
+  fetch('components/nav.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+    });
+</script>
+
 
     <div class="container">
         <header class="dashboard-header">

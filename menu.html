@@ -26,30 +26,12 @@
             color: white;
             padding: 15px 0;
         }
-        nav {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-        }
+       
         .logo {
             font-size: 24px;
             font-weight: bold;
         }
-        .nav-links {
-            display: flex;
-            list-style: none;
-        }
-        .nav-links li {
-            margin-left: 20px;
-        }
-        .nav-links a {
-            color: white;
-            text-decoration: none;
-            transition: color 0.3s;
-        }
-        .nav-links a:hover {
-            color: yellow;
-        }
+       
         /* Form Styles */
         h2 {
             margin: 20px 0;
@@ -192,20 +174,15 @@
     </style>
 </head>
 <body>
-    <header>
-        <div class="container">
-            <nav>
-                <div class="logo" id="restaurant-name">Restaurant Name</div>
-                <ul class="nav-links">
-                    <li><a href="#">Dashboard</a></li>
-                    <li><a href="#">Menu</a></li>
-                    <li><a href="#">Orders</a></li>
-                    <li><a href="#">Settings</a></li>
-                </ul>
-            </nav>
-        </div>
-    </header>
+    <div id="navbar-container"></div>
 
+<script>
+  fetch('components/nav.html')
+    .then(res => res.text())
+    .then(html => {
+      document.getElementById('navbar-container').innerHTML = html;
+    });
+</script>
     <div class="container">
         <h2>Menu Management</h2>
         <p id="restaurant-name-display">Restaurant: <span id="display-name">Loading...</span></p>
