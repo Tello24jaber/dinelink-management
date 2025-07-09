@@ -12,13 +12,10 @@
             background-color: #f5f5f5;
         }
         
-    
-        
         .container {
             max-width: 1200px;
             margin: 20px auto;
             padding: 20px;
-            
             border-radius: 5px;
             box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
         }
@@ -30,9 +27,45 @@
             margin-bottom: 20px;
         }
         
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 20px;
+        }
+        
         .restaurant-name {
             font-size: 1.8rem;
             font-weight: bold;
+        }
+        
+        .refresh-btn {
+            padding: 10px 20px;
+            background-color: #007bff;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: background-color 0.3s;
+        }
+        
+        .refresh-btn:hover {
+            background-color: #0056b3;
+        }
+        
+        .refresh-btn:disabled {
+            background-color: #ccc;
+            cursor: not-allowed;
+        }
+        
+        .error-banner {
+            background-color: #ffebee;
+            color: #d32f2f;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 20px;
+            display: none;
+            border-left: 4px solid #d32f2f;
         }
         
         .filter-controls {
@@ -83,6 +116,7 @@
             box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
             border-left: 5px solid #ddd;
             transition: transform 0.2s;
+            position: relative;
         }
         
         .order-card:hover {
@@ -99,6 +133,20 @@
         
         .order-card.ready {
             border-left-color: #28a745;
+        }
+        
+        .order-card.done {
+            background-color: #f8f9fa;
+            border-left-color: #6c757d;
+            opacity: 0.8;
+        }
+        
+        .order-card.done::after {
+            content: "✅";
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            font-size: 1.2rem;
         }
         
         .order-header {
@@ -145,6 +193,21 @@
             margin-right: 5px;
         }
         
+        .order-notes {
+            color: #666;
+            font-style: italic;
+            margin-top: 5px;
+            font-size: 0.9rem;
+        }
+        
+        .order-total {
+            font-weight: bold;
+            color: #333;
+            margin-top: 10px;
+            padding-top: 10px;
+            border-top: 2px solid #eee;
+        }
+        
         .status-tag {
             display: inline-block;
             padding: 5px 10px;
@@ -167,6 +230,11 @@
         .status-ready {
             background-color: #e8f5e9;
             color: #2e7d32;
+        }
+        
+        .status-done {
+            background-color: #f8f9fa;
+            color: #6c757d;
         }
         
         .order-actions {
@@ -218,6 +286,12 @@
             100% { opacity: 1; }
         }
         
+        .loading {
+            text-align: center;
+            padding: 40px;
+            color: #666;
+        }
+        
         .hidden {
             display: none;
         }
@@ -231,13 +305,23 @@
         .then(res => res.text())
         .then(html => {
           document.getElementById('navbar-container').innerHTML = html;
+        })
+        .catch(err => {
+          // Silently fail if nav.html doesn't exist
         });
     </script>
     
     <div class="container">
         <div class="header">
-            <div class="restaurant-name" id="restaurant-name">Loading...</div>
+            <div class="header-left">
+                <div class="restaurant-name" id="restaurant-name">Loading...</div>
+                <button class="refresh-btn" id="refresh-btn">🔄 Refresh Orders</button>
+            </div>
             <div id="current-time">Loading...</div>
+        </div>
+        
+        <div class="error-banner" id="error-banner">
+            <strong>Error:</strong> <span id="error-message"></span>
         </div>
         
         <div class="new-order-alert" id="new-order-alert">
@@ -252,6 +336,7 @@
                     <button class="status-btn" data-status="new">New</button>
                     <button class="status-btn" data-status="in-progress">In Progress</button>
                     <button class="status-btn" data-status="ready">Ready</button>
+                    <button class="status-btn" data-status="done">Done</button>
                 </div>
             </div>
             
@@ -262,91 +347,149 @@
         </div>
         
         <div class="orders-grid" id="orders-container">
-            <!-- Orders will be populated here -->
+            <div class="loading">Loading orders...</div>
         </div>
     </div>
 
     <script>
+        const SHEETDB_API = 'https://sheetdb.io/api/v1/kbippewxvqp3x';
+        let orders = [];
+        let orderIdCounter = 1;
+        
         // Simulate restaurant name from localStorage
         const restaurantNames = [
             "Bella Cucina", "Seaside Grill", "Urban Plate", "Golden Dragon", 
             "Spice Route", "The Hungry Bear", "Fresh & Tasty", "Harbor View"
         ];
         const randomRestaurant = restaurantNames[Math.floor(Math.random() * restaurantNames.length)];
-        localStorage.setItem('restaurantName', randomRestaurant);
+        document.getElementById('restaurant-name').textContent = randomRestaurant;
         
-        // Mock menu items
-        const menuItems = [
-            { name: "Classic Burger", category: "Main" },
-            { name: "Margherita Pizza", category: "Main" },
-            { name: "Caesar Salad", category: "Starter" },
-            { name: "Garlic Bread", category: "Side" },
-            { name: "Chicken Wings", category: "Appetizer" },
-            { name: "Pasta Carbonara", category: "Main" },
-            { name: "Fish & Chips", category: "Main" },
-            { name: "Chocolate Cake", category: "Dessert" },
-            { name: "Ice Cream Sundae", category: "Dessert" },
-            { name: "French Fries", category: "Side" },
-            { name: "Onion Rings", category: "Side" },
-            { name: "Chicken Curry", category: "Main" },
-            { name: "Vegetable Soup", category: "Starter" },
-            { name: "Cheesecake", category: "Dessert" },
-            { name: "Sprite", category: "Beverage" },
-            { name: "Coca Cola", category: "Beverage" },
-            { name: "Lemonade", category: "Beverage" }
-        ];
-        
-        // Generate a random order
-        function generateRandomOrder(id) {
-            const tableNumber = Math.floor(Math.random() * 15) + 1;
-            const itemCount = Math.floor(Math.random() * 4) + 1;
-            const statuses = ["new", "in-progress", "ready"];
-            const status = statuses[Math.floor(Math.random() * statuses.length)];
+        // Show error banner
+        function showError(message) {
+            const errorBanner = document.getElementById('error-banner');
+            const errorMessage = document.getElementById('error-message');
+            errorMessage.textContent = message;
+            errorBanner.style.display = 'block';
             
-            // Generate order items
-            const items = [];
-            for (let i = 0; i < itemCount; i++) {
-                const randomItem = menuItems[Math.floor(Math.random() * menuItems.length)];
-                const quantity = Math.floor(Math.random() * 3) + 1;
-                items.push({
-                    name: randomItem.name,
-                    quantity: quantity,
-                    notes: Math.random() > 0.7 ? "Special request" : ""
-                });
-            }
-            
-            // Add a beverage with 70% probability
-            if (Math.random() > 0.3) {
-                const beverages = menuItems.filter(item => item.category === "Beverage");
-                const randomBeverage = beverages[Math.floor(Math.random() * beverages.length)];
-                items.push({
-                    name: randomBeverage.name,
-                    quantity: Math.floor(Math.random() * 3) + 1,
-                    notes: ""
-                });
-            }
-            
-            // Generate a timestamp within the last hour
-            const now = new Date();
-            const orderTime = new Date(now - Math.floor(Math.random() * 60 * 60 * 1000));
-            
-            return {
-                id: id,
-                tableNumber: tableNumber,
-                items: items,
-                status: status,
-                time: orderTime
-            };
+            // Hide error after 10 seconds
+            setTimeout(() => {
+                errorBanner.style.display = 'none';
+            }, 10000);
         }
         
-        // Generate initial orders
-        let orders = [];
-        for (let i = 1; i <= 8; i++) {
-            orders.push(generateRandomOrder(i));
+        // Determine order status from SheetDB columns
+        function getOrderStatus(preparing, done) {
+            if (done === 'true' || done === true) {
+                return 'done';
+            } else if (preparing === 'true' || preparing === true) {
+                if (done === 'true' || done === true) {
+                    return 'ready';
+                } else {
+                    return 'in-progress';
+                }
+            } else {
+                return 'new';
+            }
         }
         
-        // Update the restaurant name
-        document.getElementById('restaurant-name').textContent = localStorage.getItem('restaurantName') || 'Restaurant';
+        // Parse items string into array
+        function parseItems(itemsString) {
+            if (!itemsString) return [];
+            
+            // Split by comma or semicolon and parse each item
+            const items = itemsString.split(/[,;]/).map(item => {
+                item = item.trim();
+                
+                // Try to extract quantity (e.g., "2x Pizza" or "2 Pizza")
+                const quantityMatch = item.match(/^(\d+)x?\s*(.+)$/);
+                if (quantityMatch) {
+                    return {
+                        quantity: parseInt(quantityMatch[1]),
+                        name: quantityMatch[2].trim()
+                    };
+                } else {
+                    return {
+                        quantity: 1,
+                        name: item
+                    };
+                }
+            }).filter(item => item.name); // Remove empty items
+            
+            return items;
+        }
+        
+        // Fetch orders from SheetDB
+        async function fetchOrders() {
+            try {
+                const response = await fetch(SHEETDB_API);
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                const data = await response.json();
+                
+                // Transform SheetDB data to our format
+                orders = data.map((row, index) => {
+                    const preparing = row.preparing || 'false';
+                    const done = row.done || 'false';
+                    const status = getOrderStatus(preparing, done);
+                    
+                    return {
+                        id: row.order_id,
+                        tableNumber: parseInt(row.table_number) || 1,
+                        items: parseItems(row.items),
+                        notes: row.notes || '',
+                        total: row.total || '',
+                        status: status,
+                        preparing: preparing,
+                        done: done,
+                        time: new Date() // Use current time since we don't have timestamps
+                    };
+                });
+                
+                // Check for new orders (status = 'new')
+                const newOrders = orders.filter(order => order.status === 'new');
+                if (newOrders.length > 0) {
+                    const alert = document.getElementById('new-order-alert');
+                    alert.style.display = 'block';
+                    setTimeout(() => {
+                        alert.style.display = 'none';
+                    }, 5000);
+                }
+                
+                filterOrders();
+                
+            } catch (error) {
+                console.error('Error fetching orders:', error);
+                showError('Failed to fetch orders from database. Please try refreshing.');
+            }
+        }
+        
+        // Update order status in SheetDB
+        async function updateOrderInDB(orderId, updates) {
+            try {
+                
+                const response = await fetch(`${SHEETDB_API}/order_id/${orderId}`, {
+                    method: 'PATCH',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        data: updates
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP error! status: ${response.status}`);
+                }
+                
+                return true;
+            } catch (error) {
+                console.error('Error updating order:', error);
+                showError('Failed to update order status. Please try again.');
+                return false;
+            }
+        }
         
         // Format time
         function formatTime(date) {
@@ -384,16 +527,31 @@
                 `;
                 
                 let orderItems = '<div class="order-items">';
-                order.items.forEach(item => {
-                    orderItems += `
-                        <div class="order-item">
-                            <span class="item-quantity">x${item.quantity}</span>
-                            ${item.name}
-                            ${item.notes ? `<div class="item-notes">${item.notes}</div>` : ''}
-                        </div>
-                    `;
-                });
+                if (order.items && order.items.length > 0) {
+                    order.items.forEach(item => {
+                        orderItems += `
+                            <div class="order-item">
+                                <span class="item-quantity">x${item.quantity}</span>
+                                ${item.name}
+                            </div>
+                        `;
+                    });
+                } else {
+                    orderItems += '<div class="order-item">No items specified</div>';
+                }
                 orderItems += '</div>';
+                
+                // Add notes if available
+                let notesSection = '';
+                if (order.notes) {
+                    notesSection = `<div class="order-notes">Notes: ${order.notes}</div>`;
+                }
+                
+                // Add total if available
+                let totalSection = '';
+                if (order.total) {
+                    totalSection = `<div class="order-total">Total: ${order.total}</div>`;
+                }
                 
                 const statusClass = `status-${order.status}`;
                 const statusText = order.status.replace('-', ' ');
@@ -419,14 +577,15 @@
                         <button class="complete-order" data-order-id="${order.id}">Complete Order</button>
                     `;
                 }
+                // No buttons for 'done' status
                 
-                const orderActions = `
+                const orderActions = actionButtons ? `
                     <div class="order-actions">
                         ${actionButtons}
                     </div>
-                `;
+                ` : '';
                 
-                orderCard.innerHTML = orderHeader + orderItems + statusTag + orderActions;
+                orderCard.innerHTML = orderHeader + orderItems + notesSection + totalSection + statusTag + orderActions;
                 container.appendChild(orderCard);
             });
             
@@ -461,49 +620,94 @@
         }
         
         // Update order status
-        function updateOrderStatus(event) {
-            const orderId = parseInt(event.target.dataset.orderId);
+        async function updateOrderStatus(event) {
+            const orderId = event.target.dataset.orderId;
             const newStatus = event.target.dataset.newStatus;
             
-            const orderIndex = orders.findIndex(order => order.id === orderId);
-            if (orderIndex !== -1) {
-                orders[orderIndex].status = newStatus;
+            // Disable button during update
+            event.target.disabled = true;
+            event.target.textContent = 'Updating...';
+            
+            let updates = {};
+            if (newStatus === 'in-progress') {
+                updates.preparing = 'true';
+            } else if (newStatus === 'ready') {
+                updates.done = 'true';
+            }
+            
+            const success = await updateOrderInDB(orderId, updates);
+            
+            if (success) {
+                // Update local order
+                const orderIndex = orders.findIndex(order => order.id === orderId);
+                if (orderIndex !== -1) {
+                    Object.assign(orders[orderIndex], updates);
+                    orders[orderIndex].status = getOrderStatus(orders[orderIndex].preparing, orders[orderIndex].done);
+                }
                 filterOrders();
+            } else {
+                // Re-enable button on failure
+                event.target.disabled = false;
+                if (newStatus === 'in-progress') {
+                    event.target.textContent = 'Start Preparing';
+                } else if (newStatus === 'ready') {
+                    event.target.textContent = 'Mark as Ready';
+                }
             }
         }
         
-        // Complete order (remove from list)
-        function completeOrder(event) {
-            const orderId = parseInt(event.target.dataset.orderId);
-            orders = orders.filter(order => order.id !== orderId);
-            filterOrders();
+        // Complete order (mark as done)
+        async function completeOrder(event) {
+            const orderId = event.target.dataset.orderId;
+            
+            // Disable button during update
+            event.target.disabled = true;
+            event.target.textContent = 'Completing...';
+            
+            const updates = {
+                preparing: 'true',
+                done: 'true'
+            };
+            
+            const success = await updateOrderInDB(orderId, updates);
+            
+            if (success) {
+                // Update local order
+                const orderIndex = orders.findIndex(order => order.id === orderId);
+                if (orderIndex !== -1) {
+                    Object.assign(orders[orderIndex], updates);
+                    orders[orderIndex].status = 'done';
+                }
+                filterOrders();
+            } else {
+                // Re-enable button on failure
+                event.target.disabled = false;
+                event.target.textContent = 'Complete Order';
+            }
         }
         
-        // Add a new random order
-        function addRandomOrder() {
-            const newOrderId = orders.length > 0 ? Math.max(...orders.map(order => order.id)) + 1 : 1;
-            const newOrder = generateRandomOrder(newOrderId);
-            newOrder.status = "new"; // Force new status
-            orders.unshift(newOrder);
+        // Refresh orders
+        async function refreshOrders() {
+            const refreshBtn = document.getElementById('refresh-btn');
+            refreshBtn.disabled = true;
+            refreshBtn.textContent = '🔄 Refreshing...';
             
-            // Show the new order alert
-            const alert = document.getElementById('new-order-alert');
-            alert.style.display = 'block';
+            await fetchOrders();
             
-            // Hide the alert after 5 seconds
+            // Re-enable button after 2 seconds
             setTimeout(() => {
-                alert.style.display = 'none';
-            }, 5000);
-            
-            filterOrders();
+                refreshBtn.disabled = false;
+                refreshBtn.textContent = '🔄 Refresh Orders';
+            }, 2000);
         }
         
         // Initialize the page
-        document.addEventListener('DOMContentLoaded', () => {
+        document.addEventListener('DOMContentLoaded', async () => {
             updateCurrentTime();
             setInterval(updateCurrentTime, 1000);
             
-            renderOrders(orders);
+            // Initial fetch
+            await fetchOrders();
             
             // Add event listeners for filter buttons
             document.querySelectorAll('.status-btn').forEach(button => {
@@ -517,34 +721,8 @@
             // Add event listener for table filter
             document.getElementById('table-filter').addEventListener('input', filterOrders);
             
-            // Simulate new orders every 25-45 seconds
-            setInterval(() => {
-                if (Math.random() > 0.5) { // 50% chance of getting a new order
-                    addRandomOrder();
-                }
-            }, Math.floor(Math.random() * 20000) + 25000);
-            
-            // Simulate order status changes every 15-30 seconds
-            setInterval(() => {
-                if (orders.length > 0 && Math.random() > 0.3) {
-                    // Find orders that can be updated
-                    const updatableOrders = orders.filter(order => order.status !== 'ready');
-                    
-                    if (updatableOrders.length > 0) {
-                        // Randomly pick an order to update
-                        const randomOrder = updatableOrders[Math.floor(Math.random() * updatableOrders.length)];
-                        
-                        // Update the status
-                        if (randomOrder.status === 'new') {
-                            randomOrder.status = 'in-progress';
-                        } else if (randomOrder.status === 'in-progress') {
-                            randomOrder.status = 'ready';
-                        }
-                        
-                        filterOrders();
-                    }
-                }
-            }, Math.floor(Math.random() * 15000) + 15000);
+            // Add event listener for refresh button
+            document.getElementById('refresh-btn').addEventListener('click', refreshOrders);
         });
     </script>
 </body>
