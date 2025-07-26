@@ -4,7 +4,9 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Restaurant Order Monitoring</title>
-    <style>
+   <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.6/dist/umd/supabase.min.js"></script>
+
+   <style>
         body {
             font-family: Arial, sans-serif;
             margin: 0;
@@ -351,8 +353,11 @@
         </div>
     </div>
 
-    <script>
-        const SHEETDB_API = 'https://sheetdb.io/api/v1/kbippewxvqp3x';
+   <script type="module">
+  import { createClient } from 'https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2.39.3/+esm';
+
+  const supabase = createClient('https://twvvgvwgsuccqgqcdwpm.supabase.co', 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InR3dnZndndnc3VjY3FncWNkd3BtIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NTM1MjcxMzAsImV4cCI6MjA2OTEwMzEzMH0.D2JfE_i_16HJnv1ON6H6Z76ptgYpg-U_K1DtjZ5SIHs');
+
         let orders = [];
         let orderIdCounter = 1;
         
@@ -420,76 +425,64 @@
         
         // Fetch orders from SheetDB
         async function fetchOrders() {
-            try {
-                const response = await fetch(SHEETDB_API);
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                const data = await response.json();
-                
-                // Transform SheetDB data to our format
-                orders = data.map((row, index) => {
-                    const preparing = row.preparing || 'false';
-                    const done = row.done || 'false';
-                    const status = getOrderStatus(preparing, done);
-                    
-                    return {
-                        id: row.order_id,
-                        tableNumber: parseInt(row.table_number) || 1,
-                        items: parseItems(row.items),
-                        notes: row.notes || '',
-                        total: row.total || '',
-                        status: status,
-                        preparing: preparing,
-                        done: done,
-                        time: new Date() // Use current time since we don't have timestamps
-                    };
-                });
-                
-                // Check for new orders (status = 'new')
-                const newOrders = orders.filter(order => order.status === 'new');
-                if (newOrders.length > 0) {
-                    const alert = document.getElementById('new-order-alert');
-                    alert.style.display = 'block';
-                    setTimeout(() => {
-                        alert.style.display = 'none';
-                    }, 5000);
-                }
-                
-                filterOrders();
-                
-            } catch (error) {
-                console.error('Error fetching orders:', error);
-                showError('Failed to fetch orders from database. Please try refreshing.');
-            }
+    try {
+        const { data, error } = await supabase
+            .from('orders')
+            .select('*')
+            .order('timestamp', { ascending: false });
+
+        if (error) throw error;
+
+        orders = data.map(row => {
+            const status = getOrderStatus(row.preparing, row.done);
+            return {
+                id: row.order_id,
+                tableNumber: row.table_number,
+                items: parseItems(row.items),
+                notes: row.notes,
+                total: row.total,
+                status: status,
+                preparing: row.preparing,
+                done: row.done,
+                time: new Date(row.timestamp)
+            };
+        });
+
+        const newOrders = orders.filter(order => order.status === 'new');
+        if (newOrders.length > 0) {
+            const alert = document.getElementById('new-order-alert');
+            alert.style.display = 'block';
+            setTimeout(() => {
+                alert.style.display = 'none';
+            }, 5000);
         }
+
+        filterOrders();
+
+    } catch (error) {
+        console.error('Error fetching orders from Supabase:', error.message);
+        showError('Failed to fetch orders. Please try refreshing.');
+    }
+}
+
         
-        // Update order status in SheetDB
         async function updateOrderInDB(orderId, updates) {
-            try {
-                
-                const response = await fetch(`${SHEETDB_API}/order_id/${orderId}`, {
-                    method: 'PATCH',
-                    headers: {
-                        'Content-Type': 'application/json',
-                    },
-                    body: JSON.stringify({
-                        data: updates
-                    })
-                });
-                
-                if (!response.ok) {
-                    throw new Error(`HTTP error! status: ${response.status}`);
-                }
-                
-                return true;
-            } catch (error) {
-                console.error('Error updating order:', error);
-                showError('Failed to update order status. Please try again.');
-                return false;
-            }
-        }
+    try {
+        const { error } = await supabase
+            .from('orders')
+            .update(updates)
+            .eq('order_id', orderId);
+
+        if (error) throw error;
+
+        return true;
+    } catch (error) {
+        console.error('Supabase update error:', error.message);
+        showError('Failed to update order. Please try again.');
+        return false;
+    }
+}
+
         
         // Format time
         function formatTime(date) {
